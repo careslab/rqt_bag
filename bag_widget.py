@@ -38,7 +38,7 @@ import rospkg
 
 from python_qt_binding import loadUi
 from python_qt_binding.QtCore import Qt, qWarning, Signal
-from python_qt_binding.QtGui import QFileDialog, QGraphicsView, QIcon, QWidget
+from python_qt_binding.QtGui import QFileDialog, QGraphicsView, QIcon, QWidget, QShortcut, QKeySequence
 
 import rosbag
 import bag_helper
@@ -70,9 +70,19 @@ class BagWidget(QWidget):
         ui_file = os.path.join(rp.get_path('rqt_bag'), 'resource', 'bag_widget.ui')
         loadUi(ui_file, self, {'BagGraphicsView': BagGraphicsView})
 	
-	# CARES STUFF
-	self.bag_file_name = None
-	self.arm_names = ['MTML', 'MTMR', 'ECM', 'PSM1', 'PSM2']
+        # CARES STUFF
+        self.bag_file_name = None
+        self.arm_names = ['MTML', 'MTMR', 'ECM', 'PSM1', 'PSM2']
+        
+        #self.play_shortcut = QShortcut(QKeySequence("Ctrl+P"), self, self._handle_play_clicked)
+        #self.play_shortcut = QShortcut(QKeySequence("Ctrl+P"), self, self._timeline.navigate_play)
+        #self.stop_shortcut = QShortcut(QKeySequence("Ctrl+S"), self, self._timeline.navigate_stop)
+        
+        #self.play_shortcut = QShortcut(QKeySequence("Ctrl+P"), self, self._timeline.toggle_play)
+        
+        #shortcut = QtGui.QShortcut(QtGui.QKeySequence("Ctrl+S"), self, self.copytoclipbord)
+        #shortcut.setContext(QtCore.Qt.WidgetShortcut)
+        self.play_button.setShortcut(QKeySequence("Ctrl+P"))
 	
         self.setObjectName('BagWidget')
 
@@ -99,8 +109,9 @@ class BagWidget(QWidget):
         self.load_button.setIcon(QIcon.fromTheme('document-open'))
         self.save_button.setIcon(QIcon.fromTheme('document-save'))
 
-	self.button_home.clicked[bool].connect(self._handle_home_clicked)
-	self.button_rename_topics.clicked[bool].connect(self._handle_rename_topics_clicked)
+        self.button_home.clicked[bool].connect(self._handle_home_clicked)
+        self.button_rename_topics.clicked[bool].connect(self._handle_rename_topics_clicked)
+        
         self.play_button.clicked[bool].connect(self._handle_play_clicked)
         self.thumbs_button.clicked[bool].connect(self._handle_thumbs_clicked)
         self.zoom_in_button.clicked[bool].connect(self._handle_zoom_in_clicked)
@@ -216,6 +227,8 @@ class BagWidget(QWidget):
   
 
     def add_joint_names(self, msg, topic):
+	if 'cartesian' in topic.lower():
+		return msg
 	if 'PSM1' in topic or 'PSM2' in topic:
                 msg.name = ['outer_yaw', 'outer_pitch', 'outer_insertion', 'outer_roll', 'outer_wrist_pitch', 'outer_wrist_yaw', 'jaw']
         elif 'ECM' in topic:
